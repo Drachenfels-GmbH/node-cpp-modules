@@ -1,5 +1,6 @@
 {
     "name": "modulename",
     "version": "1.0.0",
-    "main": "./build/Release/modulename"
+    "main": "./build/Release/modulename",
+    "dependencies": {"sleep": "~1.1.3"}
 }

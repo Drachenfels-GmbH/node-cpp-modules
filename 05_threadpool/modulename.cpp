@@ -26,6 +26,7 @@ struct Baton {
 
     // Custom data you can pass through.
     int32_t result;
+    useconds_t delay;
 };
 
 // This is the function called directly from JavaScript land. It creates a
@@ -33,12 +34,13 @@ struct Baton {
 Handle<Value> Async(const Arguments& args) {
     HandleScope scope;
 
-    if (!args[0]->IsFunction()) {
+
+    if (!args[1]->IsFunction()) {
         return ThrowException(Exception::TypeError(
             String::New("First argument must be a callback function")));
     }
     // There's no ToFunction(), use a Cast instead.
-    Local<Function> callback = Local<Function>::Cast(args[0]);
+    Local<Function> callback = Local<Function>::Cast(args[1]);
 
     // The baton holds our custom status information for this asynchronous call,
     // like the callback function we want to call when returning to the main
@@ -46,6 +48,7 @@ Handle<Value> Async(const Arguments& args) {
     Baton* baton = new Baton();
     baton->error = false;
     baton->callback = Persistent<Function>::New(callback);
+    baton->delay = args[0]->NumberValue();
 
     // This creates the work request struct.
     uv_work_t *req = new uv_work_t();
@@ -69,8 +72,10 @@ Handle<Value> Async(const Arguments& args) {
 void AsyncWork(uv_work_t* req) {
     Baton* baton = static_cast<Baton*>(req->data);
 
+	usleep(baton->delay);
+
     // Do work in threadpool here.
-    baton->result = 42;
+    baton->result = baton->delay;
 
     // If the work we do fails, set baton->error_message to the error string
     // and baton->error to true.
